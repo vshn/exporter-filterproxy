@@ -1,0 +1,6 @@
+exporter-filterproxy
+*.out
+*.test
+
+hack/
+.work/
