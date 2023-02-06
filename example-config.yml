@@ -1,0 +1,12 @@
+---
+addr: :8082
+endpoints:
+  kube-state-metrics:
+    path: /kube-state-metrics
+    target: http://localhost:8077/metrics
+    refreshInterval: 5s
+  kubelet:
+    path: /kubelet
+    target: http://localhost:8076/metrics
+    refreshInterval: 7s
+
