@@ -11,8 +11,9 @@ import (
 )
 
 type metricsFetcher struct {
-	url    string
-	client http.Client
+	url       string
+	client    http.Client
+	authToken string
 
 	refreshInterval time.Duration
 	mutex           sync.Mutex
@@ -29,7 +30,15 @@ func (f *metricsFetcher) FetchMetrics() ([]dto.MetricFamily, error) {
 		return f.cache, nil
 	}
 
-	resp, err := f.client.Get(f.url)
+	req, err := http.NewRequest(http.MethodGet, f.url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if f.authToken != "" {
+		req.Header.Add("Authorization", f.authToken)
+	}
+
+	resp, err := f.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

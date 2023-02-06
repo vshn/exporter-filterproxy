@@ -5,8 +5,10 @@ endpoints:
     path: /kube-state-metrics
     target: http://localhost:8077/metrics
     refreshInterval: 5s
+    auth:
+      type: Bearer
+      token: foobar
   kubelet:
     path: /kubelet
     target: http://localhost:8076/metrics
     refreshInterval: 7s
-
