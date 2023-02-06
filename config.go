@@ -16,7 +16,21 @@ type endpointConfig struct {
 	Path            string
 	Target          string
 	RefreshInterval time.Duration
+	Auth            endpointAuth
 }
+
+type endpointAuth struct {
+	Type  authType
+	Token string
+}
+
+type authType string
+
+var (
+	authModeNone   authType = ""
+	authModeBearer authType = "Bearer"
+	authModeKube   authType = "Kubernetes"
+)
 
 func readConfig(path string) (config, error) {
 	configFile, err := os.ReadFile(path)
