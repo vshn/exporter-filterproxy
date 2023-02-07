@@ -1,14 +1,15 @@
 ---
 addr: :8082
 endpoints:
-  kube-state-metrics:
+  kube_state_metrics:
     path: /kube-state-metrics
-    target: http://localhost:8077/metrics
-    refreshInterval: 5s
+    target: https://localhost:8077/metrics
+    refresh_interval: 5s
+    insecure_skip_verify: true
     auth:
       type: Bearer
       token: foobar
   kubelet:
     path: /kubelet
     target: http://localhost:8076/metrics
-    refreshInterval: 7s
+    refresh_interval: 7s

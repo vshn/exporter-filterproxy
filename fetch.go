@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"sync"
@@ -43,6 +44,15 @@ func (f *metricsFetcher) FetchMetrics() ([]dto.MetricFamily, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode > 300 {
+		res, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("got status code %d and failed to read response: %w", resp.StatusCode, err)
+
+		}
+		return nil, fmt.Errorf("got status code %d: %s", resp.StatusCode, string(res))
+	}
 
 	metrics, err := decodeMetrics(resp.Body, expfmt.ResponseFormat(resp.Header))
 	if err != nil {
