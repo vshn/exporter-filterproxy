@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
@@ -33,19 +32,11 @@ func main() {
 			return
 		}
 
-		fetcher := metricsFetcher{
-			url: endpoint.Target,
-			client: http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: endpoint.InsecureSkipVerify,
-					},
-				},
-			},
-			refreshInterval: endpoint.RefreshInterval,
-			authToken:       authToken,
-		}
-		mux.HandleFunc(endpoint.Path, handler(&fetcher))
+		mux.HandleFunc(endpoint.Path,
+			handler(
+				NewMetricsFetcher(endpoint.Target, authToken, endpoint.RefreshInterval, endpoint.InsecureSkipVerify),
+			),
+		)
 	}
 
 	srv := &http.Server{

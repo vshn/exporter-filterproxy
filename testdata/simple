@@ -1,0 +1,11 @@
+# HELP test_metric_one First sample metric
+# TYPE test_metric_one gauge
+test_metric_one{foo="bar"} 0.1
+test_metric_one{foo="buzz"} 0.2
+test_metric_one{foo="blub"} 0.3
+
+# HELP test_metric_two Second sample metric
+# TYPE test_metric_two counter
+test_metric_two{foo="bar"} 1
+test_metric_two{foo="bar",type="test"} 2
+test_metric_two{foo="blub",type="fake"} 3

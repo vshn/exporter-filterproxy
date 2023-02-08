@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,21 +14,36 @@ import (
 
 type metricsFetcher struct {
 	url       string
-	client    http.Client
+	client    *http.Client
 	authToken string
 
+	clock           func() time.Time
 	refreshInterval time.Duration
 	mutex           sync.Mutex
 	cache           []dto.MetricFamily
 	lastUpdated     time.Time
 }
 
-func (f *metricsFetcher) FetchMetrics() ([]dto.MetricFamily, error) {
+func NewMetricsFetcher(url string, authToken string, refreshInterval time.Duration, insecureSkipVerify bool) *metricsFetcher {
+	return &metricsFetcher{
+		url: url,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: insecureSkipVerify,
+				},
+			},
+		},
+		refreshInterval: refreshInterval,
+		authToken:       authToken,
+	}
+}
 
+func (f *metricsFetcher) FetchMetrics() ([]dto.MetricFamily, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	if time.Since(f.lastUpdated) < f.refreshInterval {
+	if f.now().Sub(f.lastUpdated) < f.refreshInterval {
 		return f.cache, nil
 	}
 
@@ -60,8 +76,15 @@ func (f *metricsFetcher) FetchMetrics() ([]dto.MetricFamily, error) {
 	}
 
 	f.cache = metrics
-	f.lastUpdated = time.Now()
+	f.lastUpdated = f.now()
 	return metrics, nil
+}
+
+func (f *metricsFetcher) now() time.Time {
+	if f.clock != nil {
+		return f.clock()
+	}
+	return time.Now()
 }
 
 func decodeMetrics(r io.Reader, format expfmt.Format) ([]dto.MetricFamily, error) {
