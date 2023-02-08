@@ -4,7 +4,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 )
 
-func Filter(metrics []dto.MetricFamily, filterLabels map[string]string) ([]dto.MetricFamily, error) {
+func Filter(metrics []dto.MetricFamily, filterLabels map[string]string) []dto.MetricFamily {
 	res := []dto.MetricFamily{}
 	for _, mf := range metrics {
 		fmf := filterMetricFamily(mf, filterLabels)
@@ -13,7 +13,7 @@ func Filter(metrics []dto.MetricFamily, filterLabels map[string]string) ([]dto.M
 		}
 		res = append(res, *fmf)
 	}
-	return res, nil
+	return res
 }
 
 func filterMetricFamily(mf dto.MetricFamily, filterLabels map[string]string) *dto.MetricFamily {
@@ -29,6 +29,7 @@ func filterMetricFamily(mf dto.MetricFamily, filterLabels map[string]string) *dt
 
 func matchesFilter(m *dto.Metric, filterLabels map[string]string) bool {
 	matched := 0
+
 	for _, l := range m.GetLabel() {
 		val, ok := filterLabels[l.GetName()]
 		if ok && l.GetValue() != val {
@@ -37,5 +38,6 @@ func matchesFilter(m *dto.Metric, filterLabels map[string]string) bool {
 			matched++
 		}
 	}
+
 	return matched == len(filterLabels)
 }

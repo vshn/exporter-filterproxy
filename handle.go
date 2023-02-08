@@ -27,15 +27,8 @@ func handler(fetcher *metricsFetcher) http.HandlerFunc {
 			return
 		}
 
-		filtered, err := Filter(metrics, filterLabels)
-		if err != nil {
-			log.Printf("Failed to process metrics: %s", err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
 		enc := expfmt.NewEncoder(w, expfmt.FmtText)
-
-		for _, fm := range filtered {
+		for _, fm := range Filter(metrics, filterLabels) {
 			err := enc.Encode(&fm)
 			if err != nil && !errors.Is(err, syscall.EPIPE) {
 				log.Printf("Failed to encode: %s", err.Error())
