@@ -39,6 +39,9 @@ func NewMetricsFetcher(url string, authToken string, refreshInterval time.Durati
 	}
 }
 
+// FetchMetrics will fetch and parse the exposed metrics of the configured exporter.
+// If a refreshInterval is set the method will cache the response, so if the method is called multiple times in the configured
+// refreshInterval interval, only the first call will result in a request to the upstream exporter.
 func (f *metricsFetcher) FetchMetrics() ([]dto.MetricFamily, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
