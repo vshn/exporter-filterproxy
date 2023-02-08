@@ -29,6 +29,10 @@ build-bin: fmt vet ## Build binary
 build-docker: build-bin ## Build docker image
 	$(DOCKER_CMD) build -t $(CONTAINER_IMG) .
 
+.PHONY: docker-compose-up
+docker-compose-up: build-docker ## Test locally using docker compose
+	docker-compose up
+
 .PHONY: test
 test: test-go ## All-in-one test
 

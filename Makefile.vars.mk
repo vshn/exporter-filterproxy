@@ -13,6 +13,6 @@ $(go_bin):
 ## BUILD:docker
 DOCKER_CMD ?= docker
 
-IMG_TAG ?= latest
+IMG_TAG ?= local
 # Image URL to use all building/pushing image targets
 CONTAINER_IMG ?= ghcr.io/$(PROJECT_OWNER)/$(PROJECT_NAME):$(IMG_TAG)
