@@ -1,0 +1,23 @@
+---
+version: '3.8'
+
+services:
+  filterproxy:
+    image:  ghcr.io/vshn/exporter-filterproxy:local
+    command:
+      - --config
+      - /config.yml
+    volumes:
+      - ${PWD}/sample-config/filterproxy.yml:/config.yml
+    ports:
+    - "8082:8082"
+  node:
+    image: quay.io/prometheus/node-exporter:latest
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    ports:
+      - 9090:9090
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ${PWD}/sample-config/prometheus.yml:/etc/prometheus/prometheus.yml

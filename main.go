@@ -24,7 +24,9 @@ func main() {
 		return
 	}
 
-	for _, endpoint := range conf.Endpoints {
+	for name, endpoint := range conf.Endpoints {
+		log.Printf("Registering endpoint %q at %s", name, endpoint.Path)
+
 		authToken, err := getAuthToken(endpoint.Auth)
 		if err != nil {
 			log.Fatalf("Failed to Bearer token: %s", err.Error())
@@ -53,6 +55,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 		Handler:      mux,
 	}
+	log.Printf("Listening on %s", conf.Addr)
 	log.Println(srv.ListenAndServe())
 }
 

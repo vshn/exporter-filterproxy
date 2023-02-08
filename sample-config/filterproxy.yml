@@ -9,7 +9,7 @@ endpoints:
     auth:
       type: Bearer
       token: foobar
-  kubelet:
-    path: /kubelet
-    target: http://localhost:8076/metrics
+  node:
+    path: /node
+    target: http://node:9100/metrics
     refresh_interval: 7s
