@@ -1,0 +1,15 @@
+---
+addr: :8082
+endpoints:
+  kube_state_metrics:
+    path: /kube-state-metrics
+    target: https://localhost:8077/metrics
+    refresh_interval: 5s
+    insecure_skip_verify: true
+    auth:
+      type: Bearer
+      token: foobar
+  node:
+    path: /node
+    target: http://node:9100/metrics
+    refresh_interval: 7s
