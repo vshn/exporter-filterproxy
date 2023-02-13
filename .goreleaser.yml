@@ -28,6 +28,7 @@ dockers:
   - "--platform=linux/amd64"
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+  - "docker.io/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
 
 - goarch: arm64
   use: buildx
@@ -35,6 +36,7 @@ dockers:
     - "--platform=linux/arm64/v8"
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+  - "docker.io/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
 
 docker_manifests:
   ## ghcr.io
@@ -49,6 +51,11 @@ docker_manifests:
     image_templates:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+
+  - name_template: "docker.io/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+    image_templates:
+      - "docker.io/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "docker.io/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
 
 release:
   prerelease: auto
