@@ -13,3 +13,38 @@ endpoints:
     path: /node
     target: http://node:9100/metrics
     refresh_interval: 7s
+  kubelet:
+    path: /kubelet
+    kubernetes_target:
+      endpoint:
+        name: kubelet
+        namespace: kube-system
+        port: 10250
+        scheme: https
+    auth:
+      type: kubernetes
+    refresh_interval: 7s
+  kubelet_cadvisor:
+    path: /kubelet-cadvisor
+    kubernetes_target:
+      endpoint:
+        name: kubelet
+        namespace: kube-system
+        port: 10250
+        path: /metrics/cadvisor
+        scheme: https
+    auth:
+      type: kubernetes
+    refresh_interval: 7s
+  kubelet_probes:
+    path: /kubelet-probes
+    kubernetes_target:
+      endpoint:
+        name: kubelet
+        namespace: kube-system
+        port: 10250
+        path: /metrics/probes
+        scheme: https
+    auth:
+      type: kubernetes
+    refresh_interval: 7s

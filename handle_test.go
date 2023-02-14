@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vshn/exporter-filterproxy/target"
 )
 
 func TestHandler(t *testing.T) {
@@ -19,9 +20,9 @@ func TestHandler(t *testing.T) {
 	}))
 	defer server.Close()
 
-	f := metricsFetcher{
-		url:    server.URL,
-		client: server.Client(),
+	f := target.StaticFetcher{
+		URL:    server.URL,
+		Client: server.Client(),
 	}
 	h := handler(&f)
 
