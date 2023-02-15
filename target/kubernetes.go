@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"golang.org/x/sync/errgroup"
 	"log"
 	"net/http"
 	"sync"
@@ -100,12 +101,23 @@ func (f *KubernetesEndpointFetcher) FetchMetricsFor(ctx context.Context, endpoin
 		return nil, err
 	}
 
+	g, _ := errgroup.WithContext(ctx)
+	m := sync.Mutex{}
 	for _, ip := range endpoints {
-		metrics, err := fetchMetrics(f.client, f.buildAddr(ip), f.authToken)
-		if err != nil {
-			return nil, err
-		}
-		f.cache[ip] = metrics
+		ip := ip
+		g.Go(func() error {
+			metrics, err := fetchMetrics(f.client, f.buildAddr(ip), f.authToken)
+			if err != nil {
+				return err
+			}
+			m.Lock()
+			f.cache[ip] = metrics
+			m.Unlock()
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
 	f.lastUpdated = f.now()
