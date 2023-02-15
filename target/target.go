@@ -7,7 +7,13 @@ import (
 
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 )
+
+type StaticConfig struct {
+	Targets []string       `json:"targets"`
+	Labels  model.LabelSet `json:"labels"`
+}
 
 func fetchMetrics(client *http.Client, url string, authToken string) ([]dto.MetricFamily, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)

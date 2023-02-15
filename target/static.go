@@ -8,6 +8,7 @@ import (
 	"time"
 
 	dto "github.com/prometheus/client_model/go"
+	"github.com/prometheus/common/model"
 )
 
 type StaticFetcher struct {
@@ -56,6 +57,19 @@ func (f *StaticFetcher) FetchMetrics(_ context.Context) ([]dto.MetricFamily, err
 	f.cache = metrics
 	f.lastUpdated = f.now()
 	return metrics, nil
+}
+
+func (*StaticFetcher) FetchTargetConfigs(ctx context.Context, baseTarget string, basePath string) ([]StaticConfig, error) {
+
+	conf := StaticConfig{
+		Targets: []string{baseTarget},
+		Labels: map[model.LabelName]model.LabelValue{
+			"__metrics_path__": model.LabelValue(basePath),
+			"metrics_path":     model.LabelValue(basePath),
+		},
+	}
+
+	return []StaticConfig{conf}, nil
 }
 
 func (f *StaticFetcher) now() time.Time {

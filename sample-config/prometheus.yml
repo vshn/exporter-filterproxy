@@ -5,10 +5,7 @@ global:
 
 
 scrape_configs:
-  - job_name: 'node-cpu-2'
-    metrics_path: /node
-    params:
-      cpu: ['2']
-    static_configs:
-      - targets: ['filterproxy:8082']
+  - job_name: 'exporter-filterproxy'
+    http_sd_configs:
+      - url: 'http://filterproxy:8082'
 
