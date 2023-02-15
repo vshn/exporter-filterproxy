@@ -148,13 +148,28 @@ func (f *KubernetesEndpointFetcher) discover(ctx context.Context) ([]string, err
 	}
 
 	epIPs := []string{}
-
+	seenIps := map[string]bool{}
 	for _, subset := range ep.Subsets {
-		// TODO: double check port
+		if !hasPort(subset, f.port) {
+			continue
+		}
 		for _, addr := range subset.Addresses {
+			if seenIps[addr.IP] {
+				continue
+			}
 			epIPs = append(epIPs, addr.IP)
+			seenIps[addr.IP] = true
 		}
 	}
 
 	return epIPs, nil
+}
+
+func hasPort(subset corev1.EndpointSubset, p int) bool {
+	for _, port := range subset.Ports {
+		if int(port.Port) == p {
+			return true
+		}
+	}
+	return false
 }
