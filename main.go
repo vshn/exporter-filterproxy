@@ -60,7 +60,7 @@ func main() {
 				return
 			}
 			mux.HandleFunc(endpoint.Path+"/",
-				multiHandler(endpoint.Path+"/", kf),
+				multiHandler(endpoint.Path, kf),
 			)
 		default:
 			log.Fatalf("No target set for endpoint %s", name)

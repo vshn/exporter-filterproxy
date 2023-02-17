@@ -44,13 +44,13 @@ func handler(fetcher metricsFetcher) http.HandlerFunc {
 func multiHandler(prefix string, fetcher multiMetricsFetcher) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		log.Printf("Call to %s\n", r.URL.Path)
 		filterLabels, err := parseURLParams(r.URL.Query())
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		endpoint := strings.TrimPrefix(r.URL.Path, prefix)
+		endpoint = strings.TrimPrefix(endpoint, "/")
 
 		metrics, err := fetcher.FetchMetricsFor(r.Context(), endpoint)
 		if err != nil {
