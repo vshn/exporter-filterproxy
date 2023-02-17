@@ -4,11 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"golang.org/x/sync/errgroup"
-	"log"
 	"net/http"
 	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	dto "github.com/prometheus/client_model/go"
 	corev1 "k8s.io/api/core/v1"
@@ -88,7 +88,6 @@ func NewKubernetesEndpointFetcher(opts KubernetesEndpointFetcherOpts) (*Kubernet
 }
 
 func (f *KubernetesEndpointFetcher) FetchMetricsFor(ctx context.Context, endpoint string) ([]dto.MetricFamily, error) {
-	log.Printf("FetchMetricsFor: %s\n", endpoint)
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
@@ -132,7 +131,6 @@ func (f *KubernetesEndpointFetcher) now() time.Time {
 }
 
 func (f *KubernetesEndpointFetcher) buildAddr(ip string) string {
-	log.Printf("GET: %s://%s:%d%s\n\n", f.scheme, ip, f.port, f.path)
 	return fmt.Sprintf("%s://%s:%d%s", f.scheme, ip, f.port, f.path)
 }
 
