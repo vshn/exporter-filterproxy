@@ -2,6 +2,7 @@ package target
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -384,5 +385,40 @@ func newTestEndpoint(port int, ips ...string) *corev1.Endpoints {
 				},
 			},
 		},
+	}
+}
+
+func TestKube_FetchTargetConfigs(t *testing.T) {
+	podIps := []string{"127.0.18.1", "127.0.18.2", "127.0.18.4", "127.0.18.8"}
+
+	f := KubernetesEndpointFetcher{
+		endpointname: "test-ep",
+		namespace:    "fetch-test",
+		port:         8119,
+		kube: newTestKubeEnv(
+			newTestEndpoint(8119, podIps...),
+		),
+	}
+
+	tconfs, err := f.FetchTargetConfigs(context.TODO(), "proxy.example.com", "/buzz")
+	require.NoError(t, err)
+	require.Len(t, tconfs, 4)
+
+	confMap := map[string]StaticConfig{}
+
+	for i, tconf := range tconfs {
+		require.Len(t, tconf.Targets, 1)
+		assert.Equal(t, "proxy.example.com", tconf.Targets[0])
+		assert.Len(t, tconf.Labels, 3)
+
+		inst := string(tconf.Labels["instance"])
+		assert.Contains(t, podIps, inst)
+		confMap[inst] = tconfs[i]
+	}
+
+	for _, pip := range podIps {
+		require.Contains(t, confMap, pip)
+		assert.EqualValues(t, fmt.Sprintf("/buzz/%s", pip), confMap[pip].Labels["__metrics_path__"])
+		assert.EqualValues(t, "/buzz", confMap[pip].Labels["metrics_path"])
 	}
 }

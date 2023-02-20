@@ -71,7 +71,6 @@ func multiHandler(prefix string, fetcher multiMetricsFetcher) http.HandlerFunc {
 func serviceDiscoveryHandler(prefix string, fetcher targetConfigFetcher) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		log.Printf("Call SD to %s\n", r.URL.Path)
 		configs, err := fetcher.FetchTargetConfigs(r.Context(), r.Host, strings.TrimSuffix(r.URL.Path, "/"))
 		if err != nil {
 			log.Printf("Failed to discover Endpoints: %s", err.Error())
