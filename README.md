@@ -36,7 +36,15 @@ To test the `exporter-filterproxy` in Kubernetes using the Kubernetes service di
 make kind
 ```
 
-This will start a local kind cluster and deploy a `exporter-filterproxy` that proxies the metrics of the CoreDNS service.
+This will start a local kind cluster and deploy a `exporter-filterproxy` that proxies the metrics of the CoreDNS service, as well as a Prometheus instance.
+
+Once the cluster started you can expose the test Prometheus using port-forward
+
+```
+kubectl port-forward svc/prometheus 9090
+```
+
+You should see two discovered targets through the exporter-filterproxy when you open `http://localhost:9090/targets`
 
 
 ## Configuration
