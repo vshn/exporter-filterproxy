@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	dto "github.com/prometheus/client_model/go"
+	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -121,6 +122,28 @@ func (f *KubernetesEndpointFetcher) FetchMetricsFor(ctx context.Context, endpoin
 
 	f.lastUpdated = f.now()
 	return f.cache[endpoint], nil
+}
+
+func (f *KubernetesEndpointFetcher) FetchTargetConfigs(ctx context.Context, baseTarget string, basePath string) ([]StaticConfig, error) {
+	staticConfig := []StaticConfig{}
+
+	endpoints, err := f.discover(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ip := range endpoints {
+		conf := StaticConfig{
+			Targets: []string{baseTarget},
+			Labels: map[model.LabelName]model.LabelValue{
+				"__metrics_path__": model.LabelValue(fmt.Sprintf("%s/%s", basePath, ip)),
+				"metrics_path":     model.LabelValue(basePath),
+				"instance":         model.LabelValue(ip),
+			},
+		}
+		staticConfig = append(staticConfig, conf)
+	}
+	return staticConfig, nil
 }
 
 func (f *KubernetesEndpointFetcher) now() time.Time {

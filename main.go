@@ -25,6 +25,8 @@ func main() {
 		return
 	}
 
+	targetDiscovery := multiTargetConfigFetcher{}
+
 	for name, endpoint := range conf.Endpoints {
 
 		authToken, err := getAuthToken(endpoint.Auth)
@@ -36,11 +38,11 @@ func main() {
 		switch {
 		case endpoint.Target != "":
 			log.Printf("Registering static endpoint %q at %s", name, endpoint.Path)
+			sf := target.NewStaticFetcher(endpoint.Target, authToken, endpoint.RefreshInterval, endpoint.InsecureSkipVerify)
 			mux.HandleFunc(endpoint.Path,
-				handler(
-					target.NewStaticFetcher(endpoint.Target, authToken, endpoint.RefreshInterval, endpoint.InsecureSkipVerify),
-				),
+				handler(sf),
 			)
+			targetDiscovery[endpoint.Path] = sf
 		case endpoint.KubernetesTarget != nil:
 			log.Printf("Registering kube endpoint %q at %s", name, endpoint.Path)
 			kf, err := target.NewKubernetesEndpointFetcher(
@@ -62,12 +64,20 @@ func main() {
 			mux.HandleFunc(endpoint.Path+"/",
 				multiHandler(endpoint.Path, kf),
 			)
+			mux.HandleFunc(endpoint.Path,
+				serviceDiscoveryHandler(endpoint.Path, kf),
+			)
+			targetDiscovery[endpoint.Path] = kf
 		default:
 			log.Fatalf("No target set for endpoint %s", name)
 			return
 		}
 
 	}
+
+	mux.HandleFunc("/",
+		serviceDiscoveryHandler("", targetDiscovery),
+	)
 
 	srv := &http.Server{
 		Addr:         conf.Addr,

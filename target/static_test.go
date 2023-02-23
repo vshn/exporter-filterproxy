@@ -132,3 +132,18 @@ func TestFetchError(t *testing.T) {
 	_, err := f.FetchMetrics(context.TODO())
 	require.Error(t, err)
 }
+
+func TestFetchTargetConfigs(t *testing.T) {
+
+	f := NewStaticFetcher("http://foobar.example.com/buzz", "", time.Second, false)
+
+	tconfs, err := f.FetchTargetConfigs(context.TODO(), "proxy.example.com", "/buzz")
+	require.NoError(t, err)
+	require.Len(t, tconfs, 1)
+	tconf := tconfs[0]
+	require.Len(t, tconf.Targets, 1)
+	assert.Equal(t, "proxy.example.com", tconf.Targets[0])
+	assert.Len(t, tconf.Labels, 2)
+	assert.EqualValues(t, "/buzz", tconf.Labels["__metrics_path__"])
+	assert.EqualValues(t, "/buzz", tconf.Labels["metrics_path"])
+}
