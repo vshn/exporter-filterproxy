@@ -8,3 +8,4 @@ exporter-filterproxy
 
 hack/
 .work/
+.kind/

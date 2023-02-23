@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exporter-filterproxy-deployment
+  labels:
+    app: exporter-filterproxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exporter-filterproxy
+  template:
+    metadata:
+      labels:
+        app: exporter-filterproxy
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: exporter-filterproxy-config
+      containers:
+      - name: proxy
+        image: ghcr.io/vshn/exporter-filterproxy:local
+        args:
+          - --config
+          - /etc/config/config.yml
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exporter-filterproxy-config
+data:
+  config.yml: |
+    addr: :8081
+    endpoints:
+      dns:
+        path: /dns
+        insecure_skip_verify: true
+        kubernetes_target:
+          endpoint:
+            name: kube-dns
+            namespace: kube-system
+            path: /metrics
+            port: 9153
+            scheme: http
+        auth:
+          type: Kubernetes
+        refresh_interval: 7s
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exporter-filterproxy
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: exporter-filterproxy
+  type: ClusterIP
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+ name: exporter-filterproxy
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: [ "get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: syn-exporter-filterproxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: exporter-filterproxy
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default

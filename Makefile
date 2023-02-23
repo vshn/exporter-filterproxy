@@ -10,6 +10,8 @@ MAKEFLAGS += --no-builtin-variables
 
 # General variables
 include Makefile.vars.mk
+# Test Env
+include test/kind.mk
 
 golangci_bin = $(go_bin)/golangci-lint
 

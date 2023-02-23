@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/vshn/exporter-filterproxy/target"
 )
 
 var kubeSAPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -24,19 +26,47 @@ func main() {
 	}
 
 	for name, endpoint := range conf.Endpoints {
-		log.Printf("Registering endpoint %q at %s", name, endpoint.Path)
 
 		authToken, err := getAuthToken(endpoint.Auth)
 		if err != nil {
-			log.Fatalf("Failed to Bearer token: %s", err.Error())
+			log.Fatalf("Failed to get bearer token: %s", err.Error())
 			return
 		}
 
-		mux.HandleFunc(endpoint.Path,
-			handler(
-				NewMetricsFetcher(endpoint.Target, authToken, endpoint.RefreshInterval, endpoint.InsecureSkipVerify),
-			),
-		)
+		switch {
+		case endpoint.Target != "":
+			log.Printf("Registering static endpoint %q at %s", name, endpoint.Path)
+			mux.HandleFunc(endpoint.Path,
+				handler(
+					target.NewStaticFetcher(endpoint.Target, authToken, endpoint.RefreshInterval, endpoint.InsecureSkipVerify),
+				),
+			)
+		case endpoint.KubernetesTarget != nil:
+			log.Printf("Registering kube endpoint %q at %s", name, endpoint.Path)
+			kf, err := target.NewKubernetesEndpointFetcher(
+				target.KubernetesEndpointFetcherOpts{
+					Endpointname:       endpoint.KubernetesTarget.Endpoint.Name,
+					Namespace:          endpoint.KubernetesTarget.Endpoint.Namespace,
+					Port:               endpoint.KubernetesTarget.Endpoint.Port,
+					Path:               endpoint.KubernetesTarget.Endpoint.Path,
+					Scheme:             endpoint.KubernetesTarget.Endpoint.Scheme,
+					AuthToken:          authToken,
+					RefreshInterval:    endpoint.RefreshInterval,
+					InsecureSkipVerify: endpoint.InsecureSkipVerify,
+				},
+			)
+			if err != nil {
+				log.Fatalf("Failed to initalize Kubernetes endpoint: %s", err.Error())
+				return
+			}
+			mux.HandleFunc(endpoint.Path+"/",
+				multiHandler(endpoint.Path, kf),
+			)
+		default:
+			log.Fatalf("No target set for endpoint %s", name)
+			return
+		}
+
 	}
 
 	srv := &http.Server{

@@ -15,9 +15,21 @@ type config struct {
 type endpointConfig struct {
 	Path               string        `yaml:"path"`
 	Target             string        `yaml:"target"`
+	KubernetesTarget   *kubeTarget   `yaml:"kubernetes_target"`
 	RefreshInterval    time.Duration `yaml:"refresh_interval"`
 	Auth               endpointAuth  `yaml:"auth"`
 	InsecureSkipVerify bool          `yaml:"insecure_skip_verify"`
+}
+
+type kubeTarget struct {
+	Endpoint kubeEndpointTarget `yaml:"endpoint"`
+}
+type kubeEndpointTarget struct {
+	Name      string `yaml:"name"`
+	Namespace string `yaml:"namespace"`
+	Port      int    `yaml:"port"`
+	Path      string `yaml:"path"`
+	Scheme    string `yaml:"scheme"`
 }
 
 type endpointAuth struct {

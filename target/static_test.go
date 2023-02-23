@@ -1,6 +1,7 @@
-package main
+package target
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,19 +15,19 @@ import (
 
 func TestFetch(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		data, err := os.ReadFile("testdata/simple")
+		data, err := os.ReadFile("../testdata/simple")
 		require.NoError(t, err)
 		_, err = rw.Write(data)
 		require.NoError(t, err)
 	}))
 	defer server.Close()
 
-	f := metricsFetcher{
-		url:    server.URL,
-		client: server.Client(),
+	f := StaticFetcher{
+		URL:    server.URL,
+		Client: server.Client(),
 	}
 
-	metrics, err := f.FetchMetrics()
+	metrics, err := f.FetchMetrics(context.TODO())
 	require.NoError(t, err)
 
 	assert.Len(t, metrics, 2)
@@ -55,17 +56,17 @@ func TestFetchAuth(t *testing.T) {
 		require.Len(t, auth, 1, "multiple authentication headers set")
 		require.Equal(t, "foobar", auth[0], "wrong authentication token")
 
-		data, err := os.ReadFile("testdata/simple")
+		data, err := os.ReadFile("../testdata/simple")
 		require.NoError(t, err)
 		_, err = rw.Write(data)
 		require.NoError(t, err)
 	}))
 	defer server.Close()
 
-	f := NewMetricsFetcher(server.URL, "foobar", time.Second, false)
-	f.client = server.Client()
+	f := NewStaticFetcher(server.URL, "foobar", time.Second, false)
+	f.Client = server.Client()
 
-	metrics, err := f.FetchMetrics()
+	metrics, err := f.FetchMetrics(context.TODO())
 	require.NoError(t, err)
 	assert.Len(t, metrics, 2)
 }
@@ -73,7 +74,7 @@ func TestFetchAuth(t *testing.T) {
 func TestFetchCache(t *testing.T) {
 	callCount := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		data, err := os.ReadFile("testdata/simple")
+		data, err := os.ReadFile("../testdata/simple")
 		require.NoError(t, err)
 		_, err = rw.Write(data)
 		require.NoError(t, err)
@@ -87,31 +88,31 @@ func TestFetchCache(t *testing.T) {
 		return *fakeNow
 	}
 
-	f := metricsFetcher{
-		url:             server.URL,
-		client:          server.Client(),
+	f := StaticFetcher{
+		URL:             server.URL,
+		Client:          server.Client(),
 		clock:           fakeClock,
 		refreshInterval: 5 * time.Second,
 	}
 
-	metrics, err := f.FetchMetrics()
+	metrics, err := f.FetchMetrics(context.TODO())
 	require.NoError(t, err)
 	assert.Len(t, metrics, 2)
 	assert.Equal(t, 1, callCount)
 
-	metrics, err = f.FetchMetrics()
+	metrics, err = f.FetchMetrics(context.TODO())
 	require.NoError(t, err)
 	assert.Len(t, metrics, 2)
 	assert.Equal(t, 1, callCount)
 
 	*fakeNow = fakeNow.Add(time.Second)
-	metrics, err = f.FetchMetrics()
+	metrics, err = f.FetchMetrics(context.TODO())
 	require.NoError(t, err)
 	assert.Len(t, metrics, 2)
 	assert.Equal(t, 1, callCount)
 
 	*fakeNow = fakeNow.Add(5 * time.Second)
-	metrics, err = f.FetchMetrics()
+	metrics, err = f.FetchMetrics(context.TODO())
 	require.NoError(t, err)
 	assert.Len(t, metrics, 2)
 	assert.Equal(t, 2, callCount)
@@ -125,9 +126,9 @@ func TestFetchError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	f := NewMetricsFetcher(server.URL, "", time.Second, false)
-	f.client = server.Client()
+	f := NewStaticFetcher(server.URL, "", time.Second, false)
+	f.Client = server.Client()
 
-	_, err := f.FetchMetrics()
+	_, err := f.FetchMetrics(context.TODO())
 	require.Error(t, err)
 }
